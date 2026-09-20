@@ -30,16 +30,16 @@ BEGIN
 
     BLOCK "StringFileInfo" {
         BLOCK "040904B0" {
-            VALUE "CompanyName", "Anantbot"
+            VALUE "CompanyName", "SafeLayer"
             VALUE "FileDescription", RES_FDESC
             VALUE "FileVersion", REPO_VERSION
             VALUE "InternalName", RES_NAME
             VALUE "OriginalFilename", RES_FNAME
             VALUE "ProductName", "SafeLayer AV Engine"
             VALUE "ProductVersion", RES_VER_S " ("  REPO_VERSION ")"
-            VALUE "LegalCopyright", "(C) 2025 Cisco Systems, Inc. Modified build (C) 2026 Anantbot."
+            VALUE "LegalCopyright", "(C) 2025 Cisco Systems, Inc. Modified build (C) 2026 SafeLayer."
             VALUE "LegalTrademarks", "License: GNU GPL, Version 2"
-            VALUE "Comments", "Based on ClamAV " REPO_VERSION ", modified by Anantbot. Source: https://github.com/porhong/SafeLayerAVEngin"
+            VALUE "Comments", "Based on ClamAV " REPO_VERSION ", modified by SafeLayer. Source: https://github.com/porhong/SafeLayerAVEngin"
         }
     }
     BLOCK "VarFileInfo" {

@@ -2,7 +2,7 @@
 > It is not the official ClamAV distribution and is not affiliated with,
 > sponsored by, or endorsed by Cisco. ClamAV® is a trademark of Cisco Systems, Inc.
 >
-> Modified by Anantbot, September 2026, on top of the upstream release tags.
+> Modified by SafeLayer, September 2026, on top of the upstream release tags.
 > What changed, and nothing else: the Windows program file names
 > (`slengine`, `slscan`, `slscanc`, `slupdate`), the Windows version resources,
 > and the registry key the programs read for their directories. Scanning,

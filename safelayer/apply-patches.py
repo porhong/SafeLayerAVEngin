@@ -53,12 +53,12 @@ edit("unit_tests/CMakeLists.txt", [
 edit("win32/res/common.rc.in", [
     ('#define RES_VER_S "ClamAV @PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@-devel"',
      '#define RES_VER_S "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@"'),
-    ('VALUE "CompanyName", "Cisco Systems, Inc."', 'VALUE "CompanyName", "Anantbot"'),
+    ('VALUE "CompanyName", "Cisco Systems, Inc."', 'VALUE "CompanyName", "SafeLayer"'),
     ('VALUE "ProductName", "ClamAV"', 'VALUE "ProductName", "SafeLayer AV Engine"'),
     ('VALUE "LegalCopyright", "(C) 2025 Cisco Systems, Inc."',
-     'VALUE "LegalCopyright", "(C) 2025 Cisco Systems, Inc. Modified build (C) 2026 Anantbot."'),
+     'VALUE "LegalCopyright", "(C) 2025 Cisco Systems, Inc. Modified build (C) 2026 SafeLayer."'),
     ('VALUE "Comments", REPO_VERSION',
-     'VALUE "Comments", "Based on ClamAV " REPO_VERSION ", modified by Anantbot. Source: https://github.com/porhong/SafeLayerAVEngin"'),
+     'VALUE "Comments", "Based on ClamAV " REPO_VERSION ", modified by SafeLayer. Source: https://github.com/porhong/SafeLayerAVEngin"'),
 ])
 
 for rc, fname, name, desc in [
