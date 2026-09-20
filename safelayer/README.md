@@ -50,5 +50,25 @@ release channel (`porhong/safelayer-av-releases`, release `engine`). That last
 step needs a repository secret, `RELEASE_CHANNEL_TOKEN`: a fine-grained token
 with Contents read/write on the release channel repository only.
 
-Binaries are not code signed yet. Signing has to be added before the package is
-offered to the public.
+## Do not publish unsigned builds
+
+Binaries are not code signed yet, and that blocks publishing. Tested on
+2026-09-20 with the first green build (commit `3f64c44`), on Windows 11 with
+Microsoft Defender real-time protection on:
+
+- `slscan.exe` was given the EICAR test string. Defender flagged the scanner's
+  temp file, which is expected, and three seconds later its machine-learning
+  classifier convicted `slscan.exe` itself as `Trojan:Win32/Bearfoos.B!ml`,
+  ended the process and deleted the file.
+- The Cisco-signed upstream `clamscan.exe` 1.5.4 did the same thing on the same
+  machine one minute later. Defender flagged only the temp file.
+- After the conviction, a fresh copy of `slscan.exe` was refused at launch even
+  for a harmless scan ("the file contains a virus or potentially unwanted
+  software").
+
+An unsigned, unknown program that writes malware to disk looks like a dropper.
+A scan engine does that all day. So before any `engine-*` tag: sign every
+program and DLL built here with a certificate that carries reputation, submit
+each release to Microsoft as a false positive if it is still flagged, and repeat
+this test. Until then SafeLayer AV keeps downloading the upstream package, which
+the app still supports.

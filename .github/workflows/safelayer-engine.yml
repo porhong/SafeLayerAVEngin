@@ -128,6 +128,22 @@ jobs:
           -SourceRef "${{ github.ref_name }}"
           -SourceCommit "${{ github.sha }}"
 
+      # An unsigned engine gets convicted by Microsoft Defender the first time it
+      # handles malware (safelayer/README.md, "Do not publish unsigned builds"),
+      # so a tag build without valid signatures stops here, before publishing.
+      - name: Refuse to publish unsigned programs
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        run: |
+          $dir = "dist\safelayer-engine-${{ steps.version.outputs.version }}.win.x64"
+          $unsigned = Get-ChildItem $dir -Filter sl*.exe | Where-Object {
+            (Get-AuthenticodeSignature $_.FullName).Status -ne "Valid"
+          }
+          if ($unsigned) {
+            $unsigned | ForEach-Object { Write-Host "not validly signed: $($_.Name)" }
+            throw "Programs are not code signed; nothing will be published."
+          }
+
       - name: Keep debug symbols
         uses: actions/upload-artifact@v4
         with:

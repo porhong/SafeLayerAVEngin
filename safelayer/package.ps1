@@ -59,8 +59,10 @@ This is a modified build of ClamAV $Version. ClamAV is Copyright (C) Cisco
 Systems, Inc. and/or its affiliates, and is licensed under the GNU General
 Public License, version 2. See COPYING.txt and the COPYING folder.
 
-Changes from ClamAV $($Version): the program file names and the Windows version
-resources. Scanning, signature verification and updating are unchanged.
+Changes from ClamAV $($Version): the program file names, the Windows version
+resources, and the registry key the programs read for their directories
+(Software\SafeLayerAV\Engine instead of Software\ClamAV). Scanning, signature
+verification and updating are unchanged.
 
 Complete corresponding source code for this exact build:
 
