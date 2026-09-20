@@ -1,6 +1,5 @@
-#define RES_FNAME "clamd.exe"
-#define RES_NAME "clamd"
-#define RES_FDESC "ClamAV - clamd"
+#define RES_FNAME "slengine.exe"
+#define RES_NAME "slengine"
+#define RES_FDESC "SafeLayer AV Engine - service"
 #include "common.rc"
 
-1337 ICON "clam.ico"

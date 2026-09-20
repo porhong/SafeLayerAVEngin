@@ -28,6 +28,8 @@ target_include_directories( clamscan
     PRIVATE ${CMAKE_BINARY_DIR} # For clamav-config.h
 )
 set_target_properties( clamscan PROPERTIES COMPILE_FLAGS "${WARNCFLAGS}" )
+# SafeLayer build: the program ships under SafeLayer's file name.
+set_target_properties( clamscan PROPERTIES OUTPUT_NAME slscan )
 
 if (APPLE AND CLAMAV_SIGN_FILE)
     set_target_properties( clamscan PROPERTIES

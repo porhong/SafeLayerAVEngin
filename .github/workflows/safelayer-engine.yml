@@ -1,0 +1,160 @@
+name: SafeLayer engine
+
+# Builds, tests and packages the SafeLayer engine for Windows x64.
+#
+#   push to safelayer/**   build + test + package, ZIP kept as a workflow artifact
+#   tag engine-<version>   the same, then a release here (the source record) and
+#                          the ZIP uploaded to the app's release channel
+on:
+  push:
+    branches:
+      - "safelayer/**"
+    tags:
+      - "engine-*"
+  workflow_dispatch:
+
+env:
+  BUILD_TYPE: RelWithDebInfo
+  # Same ports as upstream's Windows job in cmake.yml.
+  VCPKG_PORTS: "curl[openssl] openssl:x64-windows-static-md json-c libxml2 pcre2 check pthreads zlib pdcurses bzip2"
+  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\.vcpkg-cache
+  RELEASE_CHANNEL_REPO: porhong/safelayer-av-releases
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 180
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read the engine version from CMakeLists.txt
+        id: version
+        shell: pwsh
+        run: |
+          $cmake = Get-Content CMakeLists.txt -Raw
+          if ($cmake -notmatch 'project\(\s*ClamAV\s+VERSION\s+"([0-9.]+)"') { throw "version not found" }
+          $version = $Matches[1]
+          if ($cmake -notmatch 'set\(VERSION_SUFFIX\s+""\)') {
+            throw "VERSION_SUFFIX is not empty: this is not an upstream release. Build from a clamav-<version> tag."
+          }
+          if ("${{ github.ref_type }}" -eq "tag" -and "${{ github.ref_name }}" -notlike "engine-$version*") {
+            throw "Tag ${{ github.ref_name }} does not match engine version $version."
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Restore the vcpkg binary cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-x64-windows-${{ hashFiles('.github/workflows/safelayer-engine.yml') }}
+          restore-keys: vcpkg-x64-windows-
+
+      - name: Install C dependencies
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install --triplet x64-windows $env:VCPKG_PORTS.Split(" ")
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg install failed" }
+
+      - name: Install pytest
+        run: python -m pip install pytest
+
+      - name: Configure
+        shell: pwsh
+        run: >
+          cmake -S . -B build -A x64
+          -D CMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+          -D VCPKG_TARGET_TRIPLET=x64-windows
+          -D CMAKE_INSTALL_PREFIX="${{ github.workspace }}\stage"
+          -D ENABLE_EXAMPLES=OFF
+
+      - name: Build
+        run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+
+      - name: Test
+        # A failing upstream test blocks the package: the engine parses hostile files.
+        working-directory: build
+        run: ctest -C ${{ env.BUILD_TYPE }} --output-on-failure
+
+      - name: Install to the staging folder
+        run: cmake --install build --config ${{ env.BUILD_TYPE }}
+
+      - name: Package
+        shell: pwsh
+        run: >
+          ./safelayer/package.ps1
+          -InstallDir stage
+          -Version "${{ steps.version.outputs.version }}"
+          -OutDir dist
+          -SourceUrl "${{ github.server_url }}/${{ github.repository }}"
+          -SourceRef "${{ github.ref_name }}"
+          -SourceCommit "${{ github.sha }}"
+
+      - name: Keep debug symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: symbols-${{ steps.version.outputs.version }}
+          path: stage/*.pdb
+          if-no-files-found: warn
+
+      - name: Keep the package
+        uses: actions/upload-artifact@v4
+        with:
+          name: safelayer-engine-${{ steps.version.outputs.version }}
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: safelayer-engine-${{ needs.build.outputs.version }}
+          path: dist
+
+      # The source record: whoever receives the ZIP can find this exact tag.
+      - name: Release in this repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" dist/* \
+            --repo "${{ github.repository }}" \
+            --title "SafeLayer engine ${{ needs.build.outputs.version }}" \
+            --notes "Modified build of ClamAV ${{ needs.build.outputs.version }}. Changes: program file names, Windows version resources, registry key. Licence: GPL-2.0, see COPYING.txt."
+
+      # The app downloads from the release tagged "engine" and expects exactly
+      # one Windows ZIP there, so older ZIPs are removed after the upload.
+      - name: Upload to the app's release channel
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_CHANNEL_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::RELEASE_CHANNEL_TOKEN is not set; the package was not published to the app channel."
+            exit 1
+          fi
+          zip=$(ls dist/*.zip)
+          if ! gh release view engine --repo "$RELEASE_CHANNEL_REPO" >/dev/null 2>&1; then
+            gh release create engine --repo "$RELEASE_CHANNEL_REPO" \
+              --title "Engine ${{ needs.build.outputs.version }}" \
+              --notes "SafeLayer scan engine package. Source: ${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}"
+          fi
+          gh release upload engine "$zip" --repo "$RELEASE_CHANNEL_REPO" --clobber
+          gh release edit engine --repo "$RELEASE_CHANNEL_REPO" \
+            --title "Engine ${{ needs.build.outputs.version }}" \
+            --notes "SafeLayer scan engine package. Source: ${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}"
+          keep=$(basename "$zip")
+          gh release view engine --repo "$RELEASE_CHANNEL_REPO" --json assets --jq '.assets[].name' | while read -r name; do
+            if [ "$name" != "$keep" ]; then
+              gh release delete-asset engine "$name" --repo "$RELEASE_CHANNEL_REPO" --yes
+            fi
+          done

@@ -1,6 +1,5 @@
-#define RES_FNAME "clamscan.exe"
-#define RES_NAME "clamscan"
-#define RES_FDESC "ClamAV - clamscan"
+#define RES_FNAME "slscan.exe"
+#define RES_NAME "slscan"
+#define RES_FDESC "SafeLayer AV Engine - scanner"
 #include "common.rc"
 
-1337 ICON "clam.ico"

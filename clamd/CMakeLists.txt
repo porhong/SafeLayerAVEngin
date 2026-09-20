@@ -40,6 +40,8 @@ target_include_directories( clamd
     PRIVATE ${CMAKE_BINARY_DIR} # For clamav-config.h
 )
 set_target_properties( clamd PROPERTIES COMPILE_FLAGS "${WARNCFLAGS}" )
+# SafeLayer build: the program ships under SafeLayer's file name.
+set_target_properties( clamd PROPERTIES OUTPUT_NAME slengine )
 
 if (APPLE AND CLAMAV_SIGN_FILE)
     set_target_properties( clamd PROPERTIES

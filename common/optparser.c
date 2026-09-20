@@ -57,7 +57,8 @@
 /* clang-format off */
 
 #ifdef _WIN32
-#define CLAMKEY "Software\\ClamAV"
+/* SafeLayer build: own key, so a separate ClamAV installation is never adopted. */
+#define CLAMKEY "Software\\SafeLayerAV\\Engine"
 #endif
 
 #define MAXCMDOPTS 200

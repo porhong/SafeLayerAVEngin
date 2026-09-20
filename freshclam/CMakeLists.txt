@@ -46,9 +46,9 @@ else()
     install(TARGETS freshclam-bin DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT programs)
 endif()
 
-# Now we rename freshclam-bin executable to freshclam using target properties
+# SafeLayer build: the freshclam-bin executable ships as slupdate.
 set_target_properties( freshclam-bin
-        PROPERTIES OUTPUT_NAME freshclam )
+        PROPERTIES OUTPUT_NAME slupdate )
 
 if(SYSTEMD_FOUND)
     configure_file(

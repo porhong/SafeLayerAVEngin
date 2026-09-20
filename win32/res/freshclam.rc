@@ -1,6 +1,5 @@
-#define RES_FNAME "freshclam.exe"
-#define RES_NAME "freshclam"
-#define RES_FDESC "ClamAV - freshclam"
+#define RES_FNAME "slupdate.exe"
+#define RES_NAME "slupdate"
+#define RES_FDESC "SafeLayer AV Engine - signature updater"
 #include "common.rc"
 
-1337 ICON "clam.ico"
